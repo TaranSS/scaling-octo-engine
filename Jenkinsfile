@@ -78,9 +78,8 @@ pipeline {
         
                         sh """
                             python3 -m venv venv
-                            source venv/bin/activate
-                            pip install --no-cache-dir -r requirements.txt
-                            python -m unittest test_app.py
+                            venv/bin/pip install -r requirements.txt
+                            venv/bin/python -m unittest test_app.py
                         """
         
                         sh """
