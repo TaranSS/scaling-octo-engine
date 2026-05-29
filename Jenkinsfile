@@ -77,8 +77,10 @@ pipeline {
                         echo 'Running unit tests...'
         
                         sh """
-                            pip install -r requirements.txt
-                            pip install requests
+                            python3 -m venv venv
+                            source venv/bin/activate
+                            pip install --no-cache-dir -r requirements.txt
+                            python -m unittest test_app.py
                         """
         
                         sh """
