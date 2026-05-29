@@ -78,10 +78,15 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    echo "=== UNIT TESTS (using Flask test_client) ==="
+                    echo "=== UNIT TESTS (Flask test_client) ==="
+                    echo "Running tests inside container with correct Python path..."
                     
                     sh '''
-                        docker exec -w /app ${APP_CONTAINER} python -m unittest test_app.py -v
+                        docker exec -w /app ${APP_CONTAINER} bash -c '
+                            echo "Current directory: $(pwd)"
+                            echo "Python path: $PYTHONPATH"
+                            PYTHONPATH=. python -m unittest test_app.py -v
+                        '
                     '''
                 }
             }
