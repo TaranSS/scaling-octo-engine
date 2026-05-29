@@ -14,7 +14,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 ENV YOUR_NAME="Taran"
 
 # Expose the correct port
-EXPOSE 8080
+EXPOSE 5500
 
 # Create an entrypoint
 CMD ["python", "app.py"]
