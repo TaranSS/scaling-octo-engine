@@ -26,12 +26,15 @@ pipeline {
             steps {
                 echo 'Running Trivy filesystem scan...'
                 sh '''
-                    LC_ALL=C trivy fs \
+                    trivy fs \
                         --severity CRITICAL,HIGH \
                         --format table \
                         -o trivy-fs-report.txt .
                 '''
-                sh 'cat trivy-fs-report.txt || true'
+                sh '''
+                    echo "=== CLEAN TRIVY FILESYSTEM REPORT ==="
+                    cat trivy-fs-report.txt | tr '┌┬┐├┼┤└┴┘─│' '+++++++++|-' || cat trivy-fs-report.txt
+                '''
                 archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
             }
         }
@@ -47,12 +50,15 @@ pipeline {
             steps {
                 echo 'Scanning Docker image with Trivy...'
                 sh '''
-                    LC_ALL=C trivy image \
+                    trivy image \
                         --severity CRITICAL,HIGH \
                         --format table \
                         -o trivy-image-report.txt ${APP_IMAGE}
                 '''
-                sh 'cat trivy-image-report.txt || true'
+                sh '''
+                    echo "=== CLEAN TRIVY IMAGE REPORT ==="
+                    cat trivy-image-report.txt | tr '┌┬┐├┼┤└┴┘─│' '+++++++++|-' || cat trivy-image-report.txt
+                '''
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
