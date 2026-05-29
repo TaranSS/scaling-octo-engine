@@ -74,9 +74,11 @@ pipeline {
             steps {
                 script {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        sh """
-                            venv/bin/python -m unittest test_app.py
-                        """
+                        sh '''
+                            echo "Waiting for Flask app to start inside container..."
+                            sleep 8
+                            docker exec ${APP_CONTAINER} python -m unittest test_app.py
+                        '''
                     }
                 }
             }
