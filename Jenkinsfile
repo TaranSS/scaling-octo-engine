@@ -74,20 +74,13 @@ pipeline {
             steps {
                 script {
                     catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        echo 'Running unit tests...'
-        
                         sh """
-                            python3 -m venv venv
-                            venv/bin/pip install -r requirements.txt
                             venv/bin/python -m unittest test_app.py
-                        """
-        
-                        sh """
-                            python -m unittest test_app.py
                         """
                     }
                 }
             }
+        }
 }
     }
 
