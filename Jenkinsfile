@@ -62,6 +62,30 @@ pipeline {
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
+        stage('Unit Tests') {
+            steps {
+                script {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                        echo "=== UNIT TESTS (using Flask test_client) ==="
+                        sh '''
+                            docker exec -w /app ${APP_CONTAINER} bash -c '
+                                echo "Current directory: $(pwd)"
+                                PYTHONPATH=. python -m unittest test_app.py -v
+                            '
+                        '''
+                    }
+                }
+            }
+        }
+        stage('Gate - Quality/Security Results') {
+            steps {
+                echo 'Waiting for manual approval...'
+                input {
+                    message "✅ Quality & Security checks passed. Approve to continue?"
+                    ok "Yes, proceed with deployment"
+                }
+            }
+        }
         stage('Run Container') {
             steps {
                 echo 'Running Docker container...'
@@ -81,21 +105,6 @@ pipeline {
                     echo "=== CONTAINER LOGS ==="
                     docker logs --tail 100 ${APP_CONTAINER} || true
                 '''
-            }
-        }
-        stage('Unit Tests') {
-            steps {
-                script {
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        echo "=== UNIT TESTS (using Flask test_client) ==="
-                        sh '''
-                            docker exec -w /app ${APP_CONTAINER} bash -c '
-                                echo "Current directory: $(pwd)"
-                                PYTHONPATH=. python -m unittest test_app.py -v
-                            '
-                        '''
-                    }
-                }
             }
         }
     }
