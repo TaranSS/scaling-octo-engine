@@ -24,23 +24,6 @@ pipeline {
         }
         stage('Trivy - Filesystem Scan') {
             steps {
-                echo 'Running Trivy filesystem scan...'
-                sh """
-                    trivy fs --format table -o trivy-fs-report.txt .
-                """
-                archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
-            }
-        }
-        stage('Build Image') {
-            steps {
-                echo 'Building Docker image...'
-                sh """
-                    docker build -t ${APP_IMAGE} .
-                """
-            }
-        }
-        stage('Trivy - Filesystem Scan') {
-            steps {
                 echo 'Running Trivy filesystem scan with quality gate...'
                 sh '''
                     trivy fs \
@@ -52,7 +35,14 @@ pipeline {
                 archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
             }
         }
-
+        stage('Build Image') {
+            steps {
+                echo 'Building Docker image...'
+                sh """
+                    docker build -t ${APP_IMAGE} .
+                """
+            }
+        }
         stage('Trivy - Image Scan') {
             steps {
                 echo 'Scanning Docker image with Trivy (quality gate)...'
@@ -66,7 +56,19 @@ pipeline {
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
-
+        stage('Run Container') {
+            steps {
+                echo 'Running Docker container...'
+                sh """
+                    docker run -d \
+                        --name ${APP_CONTAINER} \
+                        --network ${NETWORK_NAME} \
+                        -e YOUR_NAME=${YOUR_NAME} \
+                        -p 5500:5500 \
+                        ${APP_IMAGE}
+                """
+            }
+        }
         stage('Unit Tests') {
             steps {
                 script {
@@ -79,6 +81,7 @@ pipeline {
                 }
             }
         }
+    }
     post {
         success {
             echo 'Deployment successful!'
