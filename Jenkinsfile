@@ -73,13 +73,20 @@ pipeline {
                         -p 5500:5500 \
                         ${APP_IMAGE}
                 """
+                echo 'Waiting for container to start...'
+                sh '''
+                    sleep 5
+                    echo "=== CONTAINER STATUS ==="
+                    docker ps -a | grep ${APP_CONTAINER} || true
+                    echo "=== CONTAINER LOGS (last 50 lines) ==="
+                    docker logs --tail 50 ${APP_CONTAINER} || true
+                '''
             }
         }
         stage('Unit Tests') {
             steps {
                 script {
-                    echo "=== UNIT TESTS (Flask test_client) ==="
-                    echo "Running tests inside container with correct Python path..."
+                    echo "=== UNIT TESTS (using Flask test_client) ==="
                     
                     sh '''
                         docker exec -w /app ${APP_CONTAINER} bash -c '
