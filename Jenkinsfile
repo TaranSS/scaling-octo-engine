@@ -32,7 +32,7 @@ pipeline {
                         -o trivy-fs-report.txt .
                 '''
                 sh '''
-                    echo "=== CLEAN TRIVY FILESYSTEM REPORT ==="
+                    echo "=== TRIVY FILESYSTEM REPORT ==="
                     cat trivy-fs-report.txt | sed 's/â”Œ/+/g; s/â”€/-/g; s/â”/+/g; s/â”œ/|/g; s/â”¼/+/g; s/â”¤/|/g; s/â””/+/g; s/â”´/+/g; s/â”˜/+/g; s/â”‚/|/g; s/â”€/-/g' || cat trivy-fs-report.txt
                 '''
                 archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
@@ -56,7 +56,7 @@ pipeline {
                         -o trivy-image-report.txt ${APP_IMAGE}
                 '''
                 sh '''
-                    echo "=== CLEAN TRIVY IMAGE REPORT ==="
+                    echo "=== TRIVY IMAGE REPORT ==="
                     cat trivy-image-report.txt | sed 's/â”Œ/+/g; s/â”€/-/g; s/â”/+/g; s/â”œ/|/g; s/â”¼/+/g; s/â”¤/|/g; s/â””/+/g; s/â”´/+/g; s/â”˜/+/g; s/â”‚/|/g; s/â”€/-/g' || cat trivy-image-report.txt
                 '''
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
@@ -78,12 +78,11 @@ pipeline {
         stage('Unit Tests') {
             steps {
                 script {
-                    echo "=== UNIT TESTS (QUALITY GATE) ==="
-                    echo "Waiting for Flask app to start inside container..."
-                    sleep 8
+                    echo "=== UNIT TESTS (using Flask test_client) ==="
                     
-                    echo "Running tests inside the Docker container..."
-                    sh "docker exec ${APP_CONTAINER} python -m unittest test_app.py"
+                    sh '''
+                        docker exec -w /app ${APP_CONTAINER} python -m unittest test_app.py -v
+                    '''
                 }
             }
         }
