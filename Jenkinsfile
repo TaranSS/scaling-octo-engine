@@ -39,45 +39,46 @@ pipeline {
                 """
             }
         }
+        stage('Trivy - Filesystem Scan') {
+            steps {
+                echo 'Running Trivy filesystem scan with quality gate...'
+                sh '''
+                    trivy fs \
+                        --exit-code 1 \
+                        --severity CRITICAL,HIGH \
+                        --format table \
+                        -o trivy-fs-report.txt .
+                '''
+                archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
+            }
+        }
+
         stage('Trivy - Image Scan') {
             steps {
-                echo 'Scanning Docker image with Trivy...'
-                sh """
-                    trivy image --format table -o trivy-image-report.txt ${APP_IMAGE}
-                """
+                echo 'Scanning Docker image with Trivy (quality gate)...'
+                sh '''
+                    trivy image \
+                        --exit-code 1 \
+                        --severity CRITICAL,HIGH \
+                        --format table \
+                        -o trivy-image-report.txt ${APP_IMAGE}
+                '''
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
-        stage('Run Container') {
-            steps {
-                echo 'Running Docker container...'
-                sh """
-                    docker run -d \
-                        --name ${APP_CONTAINER} \
-                        --network ${NETWORK_NAME} \
-                        -e YOUR_NAME=${YOUR_NAME} \
-                        -p 5500:5500 \
-                        ${APP_IMAGE}
-                """
-            }
-        }
+
         stage('Unit Tests') {
             steps {
                 script {
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        sh '''
-                            echo "=== UPDATED UNIT TESTS STAGE RUNNING ==="
-                            echo "Waiting for Flask app to start inside container..."
-                            sleep 8
-                            
-                            echo "Running tests inside the Docker container..."
-                            docker exec ${APP_CONTAINER} python -m unittest test_app.py
-                        '''
-                    }
+                    echo "=== UNIT TESTS (QUALITY GATE) ==="
+                    echo "Waiting for Flask app to start inside container..."
+                    sleep 8
+                    
+                    echo "Running tests inside the Docker container..."
+                    sh "docker exec ${APP_CONTAINER} python -m unittest test_app.py"
                 }
             }
         }
-    }
     post {
         success {
             echo 'Deployment successful!'
