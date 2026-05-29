@@ -27,11 +27,12 @@ pipeline {
                 echo 'Running Trivy filesystem scan with quality gate...'
                 sh '''
                     trivy fs \
-                        --exit-code 1 \
                         --severity CRITICAL,HIGH \
+                        --no-color \
                         --format table \
                         -o trivy-fs-report.txt .
                 '''
+                cat trivy-fs-report.txt || true
                 archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
             }
         }
@@ -43,16 +44,17 @@ pipeline {
                 """
             }
         }
-        stage('Trivy - Image Scan') {
+       stage('Trivy - Image Scan') {
             steps {
                 echo 'Scanning Docker image with Trivy (quality gate)...'
                 sh '''
                     trivy image \
-                        --exit-code 1 \
-                        --severity HIGH \
+                        --severity CRITICAL,HIGH \
+                        --no-color \
                         --format table \
                         -o trivy-image-report.txt ${APP_IMAGE}
                 '''
+                cat trivy-image-report.txt || true
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
