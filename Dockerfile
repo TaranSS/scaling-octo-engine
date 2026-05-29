@@ -1,5 +1,5 @@
 # Use Python 3.6 or later as a base image
-FROM python:latest
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
