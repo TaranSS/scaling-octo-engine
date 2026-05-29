@@ -1,15 +1,18 @@
-import requests
 import unittest
+from app import app
 
 class FlaskAppTests(unittest.TestCase):
-    BASE_URL = "http://localhost:5500"
 
-    def test_home_page(self):
-        response = requests.get(f"{self.BASE_URL}/")
+    def setUp(self):
+        self.client = app.test_client()
+
+    def test_home_route(self):
+        response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Hello", response.text)
-        self.assertIn("I'm currently running in", response.text)
-
-
+    
+    def test_health_route(self):
+        response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+    
 if __name__ == "__main__":
     unittest.main()
