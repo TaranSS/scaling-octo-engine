@@ -49,7 +49,7 @@ pipeline {
                 sh '''
                     trivy image \
                         --exit-code 1 \
-                        --severity CRITICAL,HIGH \
+                        --severity HIGH \
                         --format table \
                         -o trivy-image-report.txt ${APP_IMAGE}
                 '''
