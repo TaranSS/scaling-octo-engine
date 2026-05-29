@@ -28,7 +28,6 @@ pipeline {
                 sh '''
                     trivy fs \
                         --severity CRITICAL,HIGH \
-                        --no-color \
                         --format table \
                         -o trivy-fs-report.txt .
                 '''
@@ -44,13 +43,12 @@ pipeline {
                 """
             }
         }
-       stage('Trivy - Image Scan') {
+        stage('Trivy - Image Scan') {
             steps {
                 echo 'Scanning Docker image with Trivy (quality gate)...'
                 sh '''
                     trivy image \
                         --severity CRITICAL,HIGH \
-                        --no-color \
                         --format table \
                         -o trivy-image-report.txt ${APP_IMAGE}
                 '''
