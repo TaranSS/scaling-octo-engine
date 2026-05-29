@@ -11,7 +11,7 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Set YOUR_NAME environment variable
-ENV YOUR_NAME="Taran"
+ENV YOUR_NAME="NAME"
 
 # Expose the correct port
 EXPOSE 5500
