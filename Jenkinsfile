@@ -79,11 +79,8 @@ pipeline {
         }
         stage('Gate - Quality/Security Results') {
             steps {
-                echo 'Waiting for manual approval...'
-                input {
-                    message "✅ Quality & Security checks passed. Approve to continue?"
-                    ok "Yes, proceed with deployment"
-                }
+                echo 'Waiting for manual approval before continuing...'
+                input message: "✅ Quality & Security checks passed. Approve to continue?", ok: "Yes, proceed with deployment"
             }
         }
         stage('Run Container') {
