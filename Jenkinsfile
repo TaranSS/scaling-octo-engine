@@ -27,12 +27,32 @@ pipeline {
             }
         }
 
+        stage('Trivy - Filesystem Scan') {
+            steps {
+                echo 'Running Trivy filesystem scan...'
+                sh """
+                    trivy fs --format table -o trivy-fs-report.txt .
+                """
+                archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
+            }
+        }
+
         stage('Build Image') {
             steps {
                 echo 'Building Docker image...'
                 sh """
                     docker build -t ${APP_IMAGE} .
                 """
+            }
+        }
+
+        stage('Trivy - Image Scan') {
+            steps {
+                echo 'Scanning Docker image with Trivy...'
+                sh """
+                    trivy image --format table -o trivy-image-report.txt ${APP_IMAGE}
+                """
+                archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
         }
 
@@ -49,6 +69,25 @@ pipeline {
                 """
             }
         }
+
+        stage('Unit Tests') {
+            steps {
+                script {
+                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                        echo 'Running unit tests...'
+        
+                        sh """
+                            pip install -r requirements.txt
+                            pip install requests
+                        """
+        
+                        sh """
+                            python -m unittest test_app.py
+                        """
+                    }
+                }
+            }
+}
     }
 
     post {
