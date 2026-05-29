@@ -44,7 +44,7 @@ pipeline {
                         --name ${APP_CONTAINER} \
                         --network ${NETWORK_NAME} \
                         -e YOUR_NAME=${YOUR_NAME} \
-                        -p 5000:5000 \
+                        -p 5500:5500 \
                         ${APP_IMAGE}
                 """
             }
