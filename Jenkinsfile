@@ -33,7 +33,7 @@ pipeline {
                 '''
                 sh '''
                     echo "=== CLEAN TRIVY FILESYSTEM REPORT ==="
-                    cat trivy-fs-report.txt | tr '┌┬┐├┼┤└┴┘─│' '+++++++++|-' || cat trivy-fs-report.txt
+                    cat trivy-fs-report.txt | iconv -c -f UTF-8 -t ASCII//TRANSLIT || cat trivy-fs-report.txt
                 '''
                 archiveArtifacts artifacts: 'trivy-fs-report.txt', fingerprint: true
             }
@@ -57,7 +57,7 @@ pipeline {
                 '''
                 sh '''
                     echo "=== CLEAN TRIVY IMAGE REPORT ==="
-                    cat trivy-image-report.txt | tr '┌┬┐├┼┤└┴┘─│' '+++++++++|-' || cat trivy-image-report.txt
+                    cat trivy-image-report.txt | iconv -c -f UTF-8 -t ASCII//TRANSLIT || cat trivy-image-report.txt
                 '''
                 archiveArtifacts artifacts: 'trivy-image-report.txt', fingerprint: true
             }
