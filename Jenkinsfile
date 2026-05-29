@@ -1,52 +1,69 @@
-stages {
-        stage("Init") {
-            steps {
-                sh """
-                    docker rm -f flask-app mynginx 2>/dev/null || true
-                    docker network rm new-network 2>/dev/null || true
-                    docker network create new-network
-                """
-            }
-        }
-
-        stage("Security Scan") {
-            steps {
-                sh "trivy fs --format json -o trivy-report.json ."
-            }
-            post {
-                always {
-                    // Archive the Trivy report
-                    archiveArtifacts artifacts: 'trivy-report.json', onlyIfSuccessful: true
-                }
-            }
-        }
-
-        stage('Build') {
-            steps {
-                sh 'docker build -t flask-app .'
-                sh 'docker build -t mynginx -f Dockerfile.nginx .'
-            }
-        }
-
-        stage('Deploy') {
-            steps {
-                sh 'docker run -d --name flask-app --network new-network flask-app:latest'
-                sh 'docker run -d -p 80:80 --name mynginx --network new-network mynginx:latest'
-            }
-        }
-
-        stage('Execute Tests') {
-            steps {
-                script {
-                    catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
-                        sh '''
-                            python3 -m venv .venv
-                            . .venv/bin/activate
-                            pip install -r requirements.txt
-                            python3 -m test-app discover -s tests .
-                            deactivate
-                        '''
+pipeline {
+    agent any
+    environment {
+        NETWORK_NAME = 'python-app-network'
+        APP_IMAGE = 'my-python-app'
+        APP_CONTAINER = 'my-python-container'
+        YOUR_NAME = 'your_name'
+    }
+        stages {
+                stage("Init") {
+                    steps {
+                        sh """
+                            docker rm -f flask-app mynginx 2>/dev/null || true
+                            docker network rm new-network 2>/dev/null || true
+                            docker network create new-network
+                        """
                     }
                 }
+        
+                stage("Security Scan") {
+                    steps {
+                        sh "trivy fs --format json -o trivy-report.json ."
+                    }
+                    post {
+                        always {
+                            // Archive the Trivy report
+                            archiveArtifacts artifacts: 'trivy-report.json', onlyIfSuccessful: true
+                        }
+                    }
+                }
+        
+                stage('Build') {
+                    steps {
+                        sh 'docker build -t flask-app .'
+                        sh 'docker build -t mynginx -f Dockerfile.nginx .'
+                    }
+                }
+        
+                stage('Deploy') {
+                    steps {
+                        sh 'docker run -d --name flask-app --network new-network flask-app:latest'
+                        sh 'docker run -d -p 80:80 --name mynginx --network new-network mynginx:latest'
+                    }
+                }
+        
+                stage('Execute Tests') {
+                    steps {
+                        script {
+                            catchError(buildResult: 'UNSTABLE', stageResult: 'UNSTABLE') {
+                                sh '''
+                                    python3 -m venv .venv
+                                    . .venv/bin/activate
+                                    pip install -r requirements.txt
+                                    python3 -m unittest discover -s tests .
+                                    deactivate
+                                '''
+                            }
+                        }
+            }
+        }
+    post {
+        success {
+            echo 'Deployment successful!'
+        }
+        failure {
+            echo 'Pipeline failed!'
+        }
     }
 }
